@@ -36,7 +36,7 @@ const createTree = (exp) => {
             }
         }
     }
-    return st.pop()
+    return [st.pop(), posCnt]
 }
 
 export {TreeNode, createTree};
