@@ -1,10 +1,10 @@
 const isOperand = (s) => {
-    return s !== '|' && s !== '*' && s !== ')' && s !== '('
+    return s !== '|' && s !== '*' && s !== ')' && s !== '(' && s !== '.'
 }
 
 const augment = (s) => {
     //Add . in between characters (needed for tree)
-    s += "#"
+    s = "(" + s + ")#"     
     const n = s.length
     let r = ""
     for (let i = 0; i < n; i++) {

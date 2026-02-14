@@ -41,9 +41,9 @@ const followpos = (node, arr) => {
 
 const traverse = (root, arr) => {
     if (root === null) return
-    traverse(root.left)
-    traverse(root.right)
+    traverse(root.left, arr)
+    traverse(root.right, arr)
     followpos(root, arr)
 }
 
-export {traverse};
+export {firstpos, traverse};

@@ -17,12 +17,13 @@ class TreeNode {
     }
 }
 
-const createTree = (exp) => {
+const createTree = (exp, mp) => {
     let st = []
     let posCnt = 1;
     for (let i = 0; i < exp.length; i++) {
         if (isOperand(exp[i])) {
-            st.push(new TreeNode(exp[i], null, null, false, null, null, posCnt++))
+            st.push(new TreeNode(exp[i], null, null, false, null, null, posCnt))
+            mp.set(posCnt++, exp[i])
         }
         else {
             if (exp[i] === '*') {
@@ -36,7 +37,7 @@ const createTree = (exp) => {
             }
         }
     }
-    return [st.pop(), posCnt]
+    return [st.pop(), posCnt-1]
 }
 
 export {TreeNode, createTree};
