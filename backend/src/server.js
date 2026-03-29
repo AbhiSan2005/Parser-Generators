@@ -5,6 +5,7 @@ import {connectDB} from "./utils/connectDB.js"
 import userRoutes from "./routes/userRoutes.js"
 import regexRoutes from "./routes/regexRoutes.js"
 import enfaRoutes from "./routes/enfaRoutes.js"
+import dfaRoutes from "./routes/dfaRoutes.js"
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use("/", userRoutes)
 app.use("/", regexRoutes)
 app.use("/", enfaRoutes)
+app.use("/", dfaRoutes)
 
 app.get("/status", (req, res) => {
     res.json({
