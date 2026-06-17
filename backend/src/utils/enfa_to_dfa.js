@@ -21,7 +21,7 @@ export const enfa_to_dfa = (enfaData) => {
     const dfaRawFinalStates = new Set();
 
     const queue = [[...startState]];
-    const visistedLongNames = new Set([startStateName]);
+    const visitedLongNames = new Set([startStateName]);
 
     while(queue.length > 0) {
         const currSetofStates = queue.shift();
@@ -55,8 +55,8 @@ export const enfa_to_dfa = (enfaData) => {
             const targetName = getName([...targetSet])
             dfaRawGraph[currName][symbol] = targetName;
 
-            if(!visistedLongNames.has(targetName)) {
-                visistedLongNames.add(targetName)
+            if(!visitedLongNames.has(targetName)) {
+                visitedLongNames.add(targetName)
                 queue.push([...targetSet])
             }
         }
@@ -87,7 +87,7 @@ export const enfa_to_dfa = (enfaData) => {
     const adjacency_list = {}
     const final_states = []
 
-    for(const longName of visistedLongNames) {
+    for(const longName of visitedLongNames) {
         const newName = getNewName(longName);
         states.push(newName)
         adjacency_list[newName] = {}

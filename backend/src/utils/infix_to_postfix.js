@@ -14,7 +14,7 @@ export const infix_to_postfix = (infix) => {
 
     for (const ch of infix) {
 
-        if(/[a-zA-Z0-9]/.test(ch)) {
+        if(/[a-zA-Z0-9ε]/.test(ch)) {
             postfix += ch;
         }
         else if(ch === '(') {

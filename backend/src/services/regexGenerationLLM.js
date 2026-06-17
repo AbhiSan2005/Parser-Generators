@@ -7,8 +7,8 @@ const ai = new OpenAI({
 })
 
 export const generateRegexFromLLM = async (description) => {
-    const prompt = 
-    `
+    const prompt =
+        `
         You are an expert in Theory of Computation and Formal Languages.
 
         The user will provide a description of a formal language. The description may be written in either:
@@ -71,11 +71,11 @@ export const generateRegexFromLLM = async (description) => {
 
     try {
         const payload = {
-            model: "deepseek-ai/deepseek-v3.2",
-            messages: [{"role":"user","content":prompt}],
+            model: "moonshotai/kimi-k2.6",
+            messages: [{ "role": "user", "content": prompt }],
             temperature: 0.1,
             top_p: 0.95,
-            chat_template_kwargs: {"thinking":true},
+            chat_template_kwargs: { "thinking": true },
             stream: false
         }
 
@@ -85,7 +85,7 @@ export const generateRegexFromLLM = async (description) => {
 
         finalJSON = finalJSON.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
         finalJSON = finalJSON.replace(/```json|```/g, '').trim();
-        
+
         return JSON.parse(finalJSON);
     }
     catch (error) {
