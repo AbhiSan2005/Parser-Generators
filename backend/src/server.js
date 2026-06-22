@@ -6,6 +6,7 @@ import userRoutes from "./routes/userRoutes.js"
 import regexRoutes from "./routes/regexRoutes.js"
 import enfaRoutes from "./routes/enfaRoutes.js"
 import dfaRoutes from "./routes/dfaRoutes.js"
+import nfaRoutes from "./routes/nfaRoutes.js"
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ app.use("/", userRoutes)
 app.use("/", regexRoutes)
 app.use("/", enfaRoutes)
 app.use("/", dfaRoutes)
+app.use("/", nfaRoutes);
 
 app.get("/status", (req, res) => {
     res.json({
