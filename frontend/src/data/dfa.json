@@ -1,0 +1,66 @@
+{
+  "username": "Karan Ahuja",
+  "user_id": "b330a9c7",
+  "problem_id": "e66f9ad1",
+  "alphabet": [
+    "0",
+    "1"
+  ],
+  "states": [
+    "d0",
+    "d1",
+    "d2"
+  ],
+  "initial_states": [
+    "d0"
+  ],
+  "final_states": [
+    "d1"
+  ],
+  "transitions": [
+    {
+      "from": "d0",
+      "to": "d1",
+      "symbol": "0"
+    },
+    {
+      "from": "d0",
+      "to": "d2",
+      "symbol": "1"
+    },
+    {
+      "from": "d1",
+      "to": "d1",
+      "symbol": "0"
+    },
+    {
+      "from": "d1",
+      "to": "d1",
+      "symbol": "1"
+    },
+    {
+      "from": "d2",
+      "to": "d2",
+      "symbol": "0"
+    },
+    {
+      "from": "d2",
+      "to": "d2",
+      "symbol": "1"
+    }
+  ],
+  "adjacency_list": {
+    "d0": {
+      "0": ["d1"],
+      "1": ["d2"]
+    },
+    "d1": {
+      "0": ["d1"],
+      "1": ["d1"]
+    },
+    "d2": {
+      "0": ["d2"],
+      "1": ["d2"]
+    }
+  }
+}
