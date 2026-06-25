@@ -1,4 +1,3 @@
-import Enfa from "../models/Enfa.js";
 import { calculateEpsilonClosures, createBaseState, concatENFA, unionENFA, kleeneClosureENFA, resetTempIdCounter } from "./Thompsons_enfa_helpers.js"
 import { infix_to_postfix } from "./infix_to_postfix.js";
 
@@ -94,5 +93,3 @@ export const regex_to_enfa = (postfix) => {
         epsilon_closures: epsilon_closures
     }
 }
-
-// console.log(regex_to_enfa("ab+*"));

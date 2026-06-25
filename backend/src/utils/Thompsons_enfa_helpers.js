@@ -1,7 +1,5 @@
 // Thompsons Construction Algorithm
 
-import { set } from "mongoose";
-
 export const EPSILON = 'ε';
 let tempIdCounter = 0;
 
