@@ -19,7 +19,9 @@ const tabSchema = new mongoose.Schema({
         enum: ['REGEX', 'ENFA', 'NFA', 'DFA', 'MIN_DFA', 'CFG', 'CNF', 'PDA', 'TM', 'EMPTY'],
         default: 'EMPTY'
     },
-    machine_data: { type: mongoose.Schema.Types.Mixed, default: {} },
+    machine_data: { 
+        type: mongoose.Schema.Types.Mixed, default: {} 
+    },
     canvas_metadata: {
         last_saved_mode: { type: String, enum: ['auto', 'manual'], default: 'manual' },
         manual_nodes: { type: Array, default: [] },
