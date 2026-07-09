@@ -5,6 +5,7 @@ import {
     build_ll1_table,
     EPSILON 
 } from '../../utils/cfg_core_algos.js';
+import { generate_recursive_descent_parser } from '../../utils/parser_generator.js';
 
 export const analyzeCFG = (cfgData) => {
     if (!cfgData.terminals || !cfgData.non_terminals || !cfgData.start_symbol || !cfgData.productions) {
@@ -16,6 +17,11 @@ export const analyzeCFG = (cfgData) => {
     const followSets = compute_follow_sets(cfgData, firstSets, nullableSet);
     const ll1Result = build_ll1_table(cfgData, firstSets, followSets, nullableSet);
 
+    let generatedCode = null;
+    if (ll1Result.is_ll1) {
+        generatedCode = generate_recursive_descent_parser(cfgData, ll1Result.table);
+    }
+
     return {
         original_cfg: cfgData,
         analysis: {
@@ -26,7 +32,8 @@ export const analyzeCFG = (cfgData) => {
         parser_data: {
             parsing_table: ll1Result.table,
             is_ll1_compliant: ll1Result.is_ll1,
-            conflicts: ll1Result.conflicts
+            conflicts: ll1Result.conflicts,
+            generated_parser_code: generatedCode
         }
     };
 };
