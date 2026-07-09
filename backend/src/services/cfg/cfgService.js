@@ -19,7 +19,7 @@ export const analyzeCFG = (cfgData) => {
 
     let generatedCode = null;
     if (ll1Result.is_ll1) {
-        generatedCode = generate_recursive_descent_parser(cfgData, ll1Result.table);
+        generatedCode = generate_recursive_descent_parser(cfgData, ll1Result.table, followSets);
     }
 
     return {

@@ -1,4 +1,4 @@
-export const generate_recursive_descent_parser = (cfgData, parsingTable) => {
+export const generate_recursive_descent_parser = (cfgData, parsingTable, followSets) => {
     const { start_symbol, non_terminals, terminals } = cfgData;
     const isTerminal = (sym) => terminals.includes(sym);
 
@@ -11,10 +11,10 @@ class Parser {
     constructor(tokens) {
         this.tokens = tokens;
         this.cursor = 0;
+        this.errors = []; // <-- Track all syntax errors
     }
 
     get lookahead() {
-        // Return the current token, or '$' if we've reached the end
         return this.tokens[this.cursor] || '$';
     }
 
@@ -24,27 +24,30 @@ class Parser {
             this.cursor++;
             return { type: 'TERMINAL', value: token };
         }
-        throw new Error(\`Parse Error: Expected '\${expected}' but found '\${this.lookahead}' at position \${this.cursor}\`);
+        
+        // Soft error handling instead of hard crash
+        const errorMsg = \`Parse Error: Expected '\${expected}' but found '\${this.lookahead}' at position \${this.cursor}\`;
+        this.errors.push(errorMsg);
+        
+        // Return an error node to keep the AST intact
+        return { type: 'ERROR', message: errorMsg, expected, found: this.lookahead };
     }
 
     parse() {
         const ast = this.parse_${start_symbol}();
         if (this.lookahead !== '$') {
-            throw new Error(\`Parse Error: Unexpected trailing tokens starting with '\${this.lookahead}'\`);
+            this.errors.push(\`Parse Error: Unexpected trailing tokens starting with '\${this.lookahead}'\`);
         }
-        return ast;
+        return { ast, errors: this.errors }; // <-- Return both AST and Errors
     }
 `;
 
-    //Generate a method for each Non-Terminal based on the LL(1) Table
     for (const nt of non_terminals) {
         generatedCode += `\n    parse_${nt}() {\n`;
         generatedCode += `        const node = { type: 'NON_TERMINAL', name: '${nt}', children: [] };\n`;
         generatedCode += `        switch(this.lookahead) {\n`;
 
         const row = parsingTable[nt] || {};
-
-        // Group terminals that trigger the exact same rule to avoid switch-case redundancy
         const ruleMap = {};
         for (const [terminal, rule] of Object.entries(row)) {
             const ruleStr = JSON.stringify(rule);
@@ -54,7 +57,6 @@ class Parser {
 
         for (const [ruleStr, triggers] of Object.entries(ruleMap)) {
             const rule = JSON.parse(ruleStr);
-            
             triggers.forEach(t => {
                 generatedCode += `            case '${t}':\n`;
             });
@@ -71,14 +73,21 @@ class Parser {
             generatedCode += `                return node;\n`;
         }
 
+        const syncTokens = followSets[nt] || [];
         generatedCode += `            default:\n`;
-        generatedCode += `                throw new Error(\`Parse Error: Unexpected token '\${this.lookahead}' while parsing ${nt}\`);\n`;
-        generatedCode += `        }\n`;
-        generatedCode += `    }\n`;
+        generatedCode += `                const errorMsg = \`Parse Error: Unexpected token '\${this.lookahead}' while parsing ${nt}\`;\n`;
+        generatedCode += `                this.errors.push(errorMsg);\n`;
+        generatedCode += `                node.children.push({ type: 'ERROR', message: errorMsg });\n\n`;
+        generatedCode += `                // Panic Mode: Skip tokens until a sync token (FOLLOW set) is found\n`;
+        generatedCode += `                const syncTokens = ${JSON.stringify(syncTokens)};\n`;
+        generatedCode += `                while (this.lookahead !== '$' && !syncTokens.includes(this.lookahead)) {\n`;
+        generatedCode += `                    this.cursor++;\n`;
+        generatedCode += `                }\n`;
+        generatedCode += `                return node;\n`;
+        generatedCode += `        }\n    }\n`;
     }
 
-    generatedCode += `}\n\n`;
-    generatedCode += `export default Parser;\n`;
+    generatedCode += `}\nreturn Parser;\n`;
 
     return generatedCode;
 };
