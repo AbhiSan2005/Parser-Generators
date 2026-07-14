@@ -71,7 +71,7 @@ export const generateRegexFromLLM = async (description) => {
 
     try {
         const payload = {
-            model: "moonshotai/kimi-k2.6",
+            model: "z-ai/glm-5.2",
             messages: [{ "role": "user", "content": prompt }],
             temperature: 0.1,
             top_p: 0.95,

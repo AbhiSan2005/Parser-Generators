@@ -4,7 +4,7 @@ import cors from "cors";
 import { connectDB } from "./utils/connectDB.js";
 
 import userRoutes from "./routes/userRoutes.js";
-
+import llmRoutes from "./routes/llmRoutes.js";
 import workspaceRoutes from "./routes/workspaceRoutes.js";
 import algorithmRoutes from "./routes/algorithmRoutes.js";
 
@@ -19,6 +19,7 @@ app.use(express.json());
 app.use("/", userRoutes);
 app.use("/", workspaceRoutes);
 app.use("/", algorithmRoutes);
+app.use("/", llmRoutes);
 
 app.get("/status", (req, res) => {
     res.json({

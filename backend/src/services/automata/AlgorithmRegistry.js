@@ -1,11 +1,15 @@
-import { 
-    RegexToEnfaService, 
-    EnfaToNfaService, 
-    NfaToDfaService, 
+import {
+    RegexToEnfaService,
+    EnfaToNfaService,
+    NfaToDfaService,
     EnfaToDfaService,
     MinimizeDfaServiceHopcrofts,
-    DfaToRegexGnfaService
+    DfaToRegexGnfaService,
 } from "./index.js";
+
+import { CfgSimplificationService } from "../cfgSimplificationService.js";
+import { CfgToCnfService } from "../cfgToCnfService.js";
+import { CykService } from "../cykService.js";
 
 export const AlgorithmRegistry = {
 
@@ -37,7 +41,7 @@ export const AlgorithmRegistry = {
         return MinimizeDfaServiceHopcrofts(dfa);
     },
 
-    
+
     // Automata to Regex
     'DFA_TO_REGEX_GNFA': (data, options) => DfaToRegexGnfaService(data, options?.customOrder),
     'NFA_TO_REGEX_GNFA': (nfaData, options) => {
@@ -47,5 +51,10 @@ export const AlgorithmRegistry = {
     'ENFA_TO_REGEX_GNFA': (enfaData, options) => {
         const dfa = EnfaToDfaService(enfaData);
         return DfaToRegexGnfaService(dfa, options?.customOrder);
-    }
+    },
+
+    // Context Free Grammar
+    'SIMPLIFY_CFG': (data) => CfgSimplificationService(data),
+    'CFG_TO_CNF': (data) => CfgToCnfService(data),
+    'CYK_ALGORITHM': (data) => CykService(data.grammar, data.word),
 };
