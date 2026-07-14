@@ -5,6 +5,7 @@ import { connectDB } from "./utils/connectDB.js";
 
 import userRoutes from "./routes/userRoutes.js";
 import llmRoutes from "./routes/llmRoutes.js";
+import cfgRoutes from "./routes/cfgRoutes.js";
 import workspaceRoutes from "./routes/workspaceRoutes.js";
 import algorithmRoutes from "./routes/algorithmRoutes.js";
 
@@ -20,6 +21,7 @@ app.use("/", userRoutes);
 app.use("/", workspaceRoutes);
 app.use("/", algorithmRoutes);
 app.use("/", llmRoutes);
+app.use("/", cfgRoutes);
 
 app.get("/status", (req, res) => {
     res.json({
