@@ -8,6 +8,7 @@ export const tokenize = (inputString, terminals) => {
 
     while (cursor < inputString.length) {
         const char = inputString[cursor];
+
         if (/\s/.test(char)) {
             cursor++;
             continue;
