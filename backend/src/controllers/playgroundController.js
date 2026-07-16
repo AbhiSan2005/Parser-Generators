@@ -1,21 +1,22 @@
 import Playground from '../models/Playground.js';
 import { generateBottomUpParser } from '../services/bottomUpService.js';
-// import { generateTopDownParser } from '../services/topDownService.js'; // Abhiraj's service
+import { tokenize } from '../utils/tokenizer.js';
+import { simulateShiftReduceParsing } from '../utils/bottomup/shiftReduceEngine.js';
 
 export const createPlayground = async (req, res) => {
     try {
-        const { title, user_id } = req.body;
-        
+        const { title, name, user_id } = req.body;
+
         const newPlayground = new Playground({
-            title: title || 'Untitled Parser',
+            name: name || title || 'Untitled Parser Playground',
             user_id,
-            grammar: {
+            grammar_source: {
                 variables: [],
                 terminals: [],
                 start_variable: '',
                 productions: {}
             },
-            parser_type: 'SLR1' // Default type
+            parser_type: 'SLR1'
         });
 
         const savedPlayground = await newPlayground.save();
@@ -27,9 +28,9 @@ export const createPlayground = async (req, res) => {
 
 export const getPlayground = async (req, res) => {
     try {
-        const playground = await Playground.findById(req.params.id);
+        const playground = await Playground.findOne({ playground_id: req.params.id });
         if (!playground) return res.status(404).json({ error: 'Playground not found' });
-        
+
         res.status(200).json(playground);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch playground', details: error.message });
@@ -47,16 +48,19 @@ export const getUserPlaygrounds = async (req, res) => {
 
 export const saveGrammar = async (req, res) => {
     try {
-        const { grammar, parser_type } = req.body;
-        
-        const updatedPlayground = await Playground.findByIdAndUpdate(
-            req.params.id,
-            { grammar, parser_type },
+        const { grammar, grammar_source, parser_type } = req.body;
+
+        const updatedPlayground = await Playground.findOneAndUpdate(
+            { playground_id: req.params.id },
+            {
+                grammar_source: grammar_source || grammar,
+                parser_type
+            },
             { new: true }
         );
 
         if (!updatedPlayground) return res.status(404).json({ error: 'Playground not found' });
-        
+
         res.status(200).json({ message: 'Grammar saved successfully', playground: updatedPlayground });
     } catch (error) {
         res.status(500).json({ error: 'Failed to save grammar', details: error.message });
@@ -65,61 +69,124 @@ export const saveGrammar = async (req, res) => {
 
 export const compileParser = async (req, res) => {
     try {
-        const playground = await Playground.findById(req.params.id);
+        const playground = await Playground.findOne({ playground_id: req.params.id });
         if (!playground) return res.status(404).json({ error: 'Playground not found' });
 
-        const grammar = playground.grammar;
+        const grammarSource = playground.grammar_source;
         const parserType = playground.parser_type;
 
-        // Basic validation before sending to the math engine
-        if (!grammar.start_variable || Object.keys(grammar.productions).length === 0) {
-            return res.status(400).json({ error: 'Cannot compile: Grammar is empty or missing a start variable.' });
+        if (!grammarSource.start_variable || Object.keys(grammarSource.productions || {}).length === 0) {
+            return res.status(400).json({ error: 'Cannot compile: Grammar source parameters are incomplete.' });
         }
 
         let compilerOutput;
 
         try {
-            // Route to the appropriate mathematical service
             if (parserType === 'LR0' || parserType === 'SLR1') {
-                compilerOutput = generateBottomUpParser(grammar, parserType);
+                compilerOutput = generateBottomUpParser(grammarSource, parserType);
             } else if (parserType === 'LL1') {
-                // Abhiraj remove the return and uncomment this after you have completed you code
-                // compilerOutput = generateTopDownParser(grammar);
-                return res.status(501).json({ error: 'LL(1) compilation service not yet linked.' });
+                return res.status(501).json({ error: 'LL(1) top-down compilation engine not linked yet.' });
             } else {
-                return res.status(400).json({ error: `Unsupported parser type: ${parserType}` });
+                return res.status(400).json({ error: `Unsupported parser type choice: ${parserType}` });
             }
         } catch (mathError) {
-            // Catch mathematical or syntax errors from the utilities (e.g., infinite loops aborted)
-            return res.status(422).json({ error: 'Compilation Failed', details: mathError.message });
+            return res.status(422).json({ error: 'Compilation Math Failed', details: mathError.message });
         }
 
-        playground.has_conflicts = compilerOutput.has_conflicts;
-        playground.conflicts = compilerOutput.conflicts;
-        playground.item_sets = compilerOutput.item_sets;
-        playground.parse_table = compilerOutput.parse_table;
-        playground.generated_code = compilerOutput.generated_code;
-        playground.last_compiled_at = Date.now();
+        playground.compiled_data = {
+            has_conflicts: compilerOutput.has_conflicts,
+            conflicts: compilerOutput.conflicts,
+            item_sets: compilerOutput.item_sets,
+            parse_table: compilerOutput.parse_table,
+            generated_code: compilerOutput.generated_code,
+            last_compiled_at: Date.now()
+        };
 
         const savedPlayground = await playground.save();
 
         res.status(200).json({
             message: 'Compilation successful!',
-            has_conflicts: savedPlayground.has_conflicts,
-            conflicts: savedPlayground.conflicts,
+            has_conflicts: savedPlayground.compiled_data.has_conflicts,
+            conflicts: savedPlayground.compiled_data.conflicts,
             data: savedPlayground
         });
 
     } catch (error) {
-        res.status(500).json({ error: 'Server error during compilation', details: error.message });
+        res.status(500).json({ error: 'Server error during compilation execution', details: error.message });
+    }
+};
+
+export const evaluateTestString = async (req, res) => {
+    try {
+        const { test_input } = req.body;
+
+        // 1. Fetch the playground using the custom 8-character ID
+        const playground = await Playground.findOne({ playground_id: req.params.id });
+        if (!playground) return res.status(404).json({ error: 'Playground not found' });
+
+        // 2. Ensure the parser has actually been compiled
+        const parseTable = playground.compiled_data?.parse_table;
+        const grammarSource = playground.grammar_source;
+
+        if (!parseTable || !parseTable.action || Object.keys(parseTable.action).length === 0) {
+            return res.status(400).json({ error: 'Parser has not been compiled yet. Please compile first.' });
+        }
+
+        let sandboxState = {
+            test_input: test_input || '',
+            status: 'IDLE',
+            error_message: null,
+            abstract_syntax_tree: null
+        };
+
+        // 3. Run the Evaluation Engine
+        if (test_input && test_input.trim() !== '') {
+            try {
+                const tokens = tokenize(test_input, grammarSource.terminals);
+                const result = simulateShiftReduceParsing(
+                    tokens,
+                    parseTable.action,
+                    parseTable.goto,
+                    parseTable.indexed_rules
+                );
+
+                sandboxState = {
+                    test_input,
+                    status: result.status,
+                    error_message: result.error_message,
+                    abstract_syntax_tree: result.abstract_syntax_tree
+                };
+            } catch (err) {
+                // Catches lexical errors (e.g., unrecognized tokens)
+                sandboxState = {
+                    test_input,
+                    status: 'REJECTED',
+                    error_message: err.message,
+                    abstract_syntax_tree: null
+                };
+            }
+        }
+
+        // 4. Save the results back to the database
+        playground.evaluation_sandbox = sandboxState;
+        const savedPlayground = await playground.save();
+
+        // 5. Send the AST and status back to the frontend
+        res.status(200).json({
+            message: 'Evaluation complete',
+            sandbox: savedPlayground.evaluation_sandbox
+        });
+
+    } catch (error) {
+        res.status(500).json({ error: 'Server error during evaluation', details: error.message });
     }
 };
 
 export const deletePlayground = async (req, res) => {
     try {
-        const deleted = await Playground.findByIdAndDelete(req.params.id);
+        const deleted = await Playground.findOneAndDelete({ playground_id: req.params.id });
         if (!deleted) return res.status(404).json({ error: 'Playground not found' });
-        
+
         res.status(200).json({ message: 'Playground deleted successfully' });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete playground', details: error.message });

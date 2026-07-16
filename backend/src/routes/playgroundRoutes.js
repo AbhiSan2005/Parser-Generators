@@ -5,7 +5,8 @@ import {
     getUserPlaygrounds,
     saveGrammar,
     compileParser,
-    deletePlayground
+    deletePlayground,
+    evaluateTestString
 } from '../controllers/playgroundController.js';
 
 const router = express.Router();
@@ -16,5 +17,6 @@ router.get('/:id', getPlayground);
 router.put('/:id/grammar', saveGrammar);
 router.post('/:id/compile', compileParser);
 router.delete('/:id', deletePlayground);
+router.post('/:id/evaluate', evaluateTestString);
 
 export default router;

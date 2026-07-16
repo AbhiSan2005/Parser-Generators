@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { v4 as uuidv4 } from "uuid";
 
 const PlaygroundSchema = new mongoose.Schema({
     user_id: {
@@ -27,28 +28,24 @@ const PlaygroundSchema = new mongoose.Schema({
     parser_type: {
         type: String,
         required: true,
-        enum: ['LL1', 'SLR1', 'LR1'],
+        enum: ['LL1', 'LR0', 'SLR1', 'LR1'], // Added LR0 here!
         default: 'SLR1'
     },
     grammar_source: {
         variables: {
             type: [String],
-            required: true,
             default: []
         },
         terminals: {
             type: [String],
-            required: true,
             default: []
         },
         start_variable: {
             type: String,
-            required: true,
-            default: ''
+            default: '' // Removed required constraint to enable true empty initial state
         },
         productions: {
             type: mongoose.Schema.Types.Mixed,
-            required: true,
             default: {}
         }
     },
