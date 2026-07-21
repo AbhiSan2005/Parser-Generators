@@ -1,5 +1,8 @@
 import Playground from '../models/Playground.js';
 import { generateBottomUpParser } from '../services/bottomUpService.js';
+// 1. Import your Top-Down Pipeline and Engine
+import { runLL1Pipeline } from '../services/topDownService.js';
+import { simulateLL1 } from '../utils/topdown/ll1Engine.js';
 import { tokenize } from '../utils/tokenizer.js';
 import { simulateShiftReduceParsing } from '../utils/bottomup/shiftReduceEngine.js';
 
@@ -85,7 +88,21 @@ export const compileParser = async (req, res) => {
             if (parserType === 'LR0' || parserType === 'SLR1') {
                 compilerOutput = generateBottomUpParser(grammarSource, parserType);
             } else if (parserType === 'LL1') {
-                return res.status(501).json({ error: 'LL(1) top-down compilation engine not linked yet.' });
+                // 2. Link your LL(1) compilation service here
+                const topDownResult = runLL1Pipeline(grammarSource);
+                
+                // Map your output to the unified format expected by the database schema
+                compilerOutput = {
+                    has_conflicts: !topDownResult.parser_data.is_ll1_compliant,
+                    conflicts: topDownResult.parser_data.conflicts,
+                    item_sets: {}, // LL(1) does not use item sets
+                    parse_table: topDownResult.parser_data.parsing_table,
+                    generated_code: {
+                        javascript: topDownResult.parser_data.generated_code || '',
+                        python: '',
+                        cpp: ''
+                    }
+                };
             } else {
                 return res.status(400).json({ error: `Unsupported parser type choice: ${parserType}` });
             }
@@ -120,15 +137,19 @@ export const evaluateTestString = async (req, res) => {
     try {
         const { test_input } = req.body;
 
-        // 1. Fetch the playground using the custom 8-character ID
         const playground = await Playground.findOne({ playground_id: req.params.id });
         if (!playground) return res.status(404).json({ error: 'Playground not found' });
 
-        // 2. Ensure the parser has actually been compiled
         const parseTable = playground.compiled_data?.parse_table;
         const grammarSource = playground.grammar_source;
+        const parserType = playground.parser_type;
 
-        if (!parseTable || !parseTable.action || Object.keys(parseTable.action).length === 0) {
+        // Check for table existence based on parser type
+        const isTableValid = parserType === 'LL1' 
+            ? Object.keys(parseTable || {}).length > 0 
+            : (parseTable && parseTable.action && Object.keys(parseTable.action).length > 0);
+
+        if (!isTableValid) {
             return res.status(400).json({ error: 'Parser has not been compiled yet. Please compile first.' });
         }
 
@@ -139,25 +160,36 @@ export const evaluateTestString = async (req, res) => {
             abstract_syntax_tree: null
         };
 
-        // 3. Run the Evaluation Engine
         if (test_input && test_input.trim() !== '') {
             try {
                 const tokens = tokenize(test_input, grammarSource.terminals);
-                const result = simulateShiftReduceParsing(
-                    tokens,
-                    parseTable.action,
-                    parseTable.goto,
-                    parseTable.indexed_rules
-                );
+                let result;
 
-                sandboxState = {
-                    test_input,
-                    status: result.status,
-                    error_message: result.error_message,
-                    abstract_syntax_tree: result.abstract_syntax_tree
-                };
+                // 3. Route the evaluation to the correct simulator engine
+                if (parserType === 'LL1') {
+                    result = simulateLL1(parseTable, grammarSource.start_variable, tokens);
+                    sandboxState = {
+                        test_input,
+                        status: result.isAccepted ? 'ACCEPTED' : 'REJECTED',
+                        error_message: result.isAccepted ? null : 'Syntax error encountered during LL(1) parsing.',
+                        abstract_syntax_tree: result.steps // For LL1, we store the step-by-step frames here
+                    };
+                } else {
+                    result = simulateShiftReduceParsing(
+                        tokens,
+                        parseTable.action,
+                        parseTable.goto,
+                        parseTable.indexed_rules
+                    );
+                    sandboxState = {
+                        test_input,
+                        status: result.status,
+                        error_message: result.error_message,
+                        abstract_syntax_tree: result.abstract_syntax_tree
+                    };
+                }
+
             } catch (err) {
-                // Catches lexical errors (e.g., unrecognized tokens)
                 sandboxState = {
                     test_input,
                     status: 'REJECTED',
@@ -167,11 +199,9 @@ export const evaluateTestString = async (req, res) => {
             }
         }
 
-        // 4. Save the results back to the database
         playground.evaluation_sandbox = sandboxState;
         const savedPlayground = await playground.save();
 
-        // 5. Send the AST and status back to the frontend
         res.status(200).json({
             message: 'Evaluation complete',
             sandbox: savedPlayground.evaluation_sandbox
