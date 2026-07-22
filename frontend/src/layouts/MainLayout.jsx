@@ -1,44 +1,22 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import Sidebar from '../features/navigation/Sidebar';
-import { fetchUserWorkspaces } from '../api/workspaceClient';
-import { setWorkspacesList } from '../store/workspaceSlice';
+import Sidebar from '../components/Sidebar';
 
 const MainLayout = () => {
-    const [isCollapsed, setIsCollapsed] = useState(false);
-    const dispatch = useDispatch();
-    const { currentUser } = useSelector((state) => state.workspace);
-
-    useEffect(() => {
-        const loadInitialData = async () => {
-            try {
-                const response = await fetchUserWorkspaces(currentUser.user_id);
-                // Handle both wrapped { data: [...] } or raw array [...]
-                const data = response.data || (Array.isArray(response) ? response : []);
-                
-                if (data) {
-                    dispatch(setWorkspacesList(data));
-                }
-            } catch (error) {
-                console.error("Failed to fetch workspaces:", error);
-            }
-        };
-        loadInitialData();
-    }, [currentUser.user_id, dispatch]);
+    // This state controls whether the sidebar is open or closed globally
+    const [isCollapsed, setIsCollapsed] = useState(true);
 
     return (
-        <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
-            <aside style={{ 
-                width: isCollapsed ? '70px' : '250px', 
-                transition: 'width 0.3s ease', 
-                backgroundColor: '#1e1e1e', 
-                color: 'white', 
-                borderRight: '1px solid #333' 
-            }}>
-                <Sidebar isCollapsed={isCollapsed} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
-            </aside>
-            <main style={{ flexGrow: 1, backgroundColor: '#121212', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+        <div className="flex min-h-screen w-full bg-mocha-base font-mono">
+            {/* The Sidebar Component */}
+            <Sidebar 
+                isCollapsed={isCollapsed} 
+                toggleSidebar={() => setIsCollapsed(!isCollapsed)} 
+            />
+            
+            {/* The Main Content Area */}
+            <main className="flex-grow flex flex-col min-h-screen w-full overflow-y-auto">
+                {/* Outlet renders the current route's component (e.g., Home) */}
                 <Outlet />
             </main>
         </div>

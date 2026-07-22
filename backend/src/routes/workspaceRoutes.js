@@ -6,6 +6,7 @@ import {
     createTab,
     updateTab,
     deleteWorkspace,
+    updateWorkspace,
     deleteTab,
     setActiveTab
 } from "../controllers/workspaceController.js";
@@ -17,6 +18,7 @@ router.get("/workspaces/user/:user_id", getUserWorkspaces);
 router.get("/workspaces/:workspace_id", getWorkspaceById);
 router.post("/workspaces", createWorkspace);
 router.delete("/workspaces/:workspace_id", deleteWorkspace);
+router.put("/workspaces/:workspace_id", updateWorkspace);
 
 // Tab Routes
 router.post("/workspaces/:workspace_id/tabs", createTab);

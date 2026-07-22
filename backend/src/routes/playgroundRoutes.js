@@ -6,6 +6,7 @@ import {
     saveGrammar,
     compileParser,
     deletePlayground,
+    updatePlayground,
     evaluateTestString
 } from '../controllers/playgroundController.js';
 
@@ -17,6 +18,7 @@ router.get('/:id', getPlayground);
 router.put('/:id/grammar', saveGrammar);
 router.post('/:id/compile', compileParser);
 router.delete('/:id', deletePlayground);
+router.put('/:id', updatePlayground);
 router.post('/:id/evaluate', evaluateTestString);
 
 export default router;

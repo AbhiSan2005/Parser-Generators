@@ -181,6 +181,33 @@ export const deleteWorkspace = async (req, res) => {
     }
 };
 
+export const updateWorkspace = async (req, res) => {
+    try {
+        const { workspace_id } = req.params;
+        const { title, description } = req.body;
+
+        const updatedWorkspace = await Workspace.findOneAndUpdate(
+            { workspace_id },
+            { $set: { title, description } },
+            { new: true }
+        );
+
+        if (!updatedWorkspace) {
+            return res.status(404).json({
+                success: false, Error: "Workspace not found"
+            });
+        }
+
+        res.json({
+            success: true, data: updatedWorkspace
+        });
+    } catch (error) {
+        res.json({
+            success: false, Error: error.message
+        });
+    }
+};
+
 export const deleteTab = async (req, res) => {
     try {
         const { workspace_id, tab_id } = req.params;

@@ -1,9 +1,46 @@
 @import "tailwindcss";
 
-html, body, #root {
-  width: 100%;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
+@theme {
+  /* Catppuccin Mocha Palette */
+  --color-mocha-base: #1e1e2e;
+  --color-mocha-mantle: #181825;
+  --color-mocha-crust: #11111b;
+  --color-mocha-surface0: #313244;
+  --color-mocha-surface1: #45475a;
+  --color-mocha-surface2: #585b70;
+  --color-mocha-text: #cdd6f4;
+  --color-mocha-subtext0: #a6adc8;
+  --color-mocha-subtext1: #bac2de;
+  --color-mocha-mauve: #cba6f7;
+  --color-mocha-blue: #89b4fa;
+  --color-mocha-green: #a6e3a1;
+  --color-mocha-red: #f38ba8;
+  --color-mocha-teal: #94e2d5;
+
+  /* Typography */
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+@layer base {
+  body {
+    @apply bg-mocha-base text-mocha-text font-mono antialiased min-h-screen overflow-x-hidden m-0 p-0;
+  }
+}
+
+/* Custom IDE-style Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-mocha-mantle;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-mocha-surface0 rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-mocha-surface1;
 }

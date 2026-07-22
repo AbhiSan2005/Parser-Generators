@@ -23,7 +23,7 @@ app.use("/", workspaceRoutes);
 app.use("/", algorithmRoutes);
 app.use("/", llmRoutes);
 // app.use("/", cfgRoutes); // Remove
-app.use("/playground", playgroundRoutes)
+app.use("/playgrounds", playgroundRoutes)
 
 app.get("/status", (req, res) => {
     res.json({

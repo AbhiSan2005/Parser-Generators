@@ -1,12 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-    currentUser: {
-        user_id: "b330a9c7",
-        username: "Karan Ahuja"
-    },
-    activeWorkspace: null,
     workspacesList: [],
+    activeWorkspace: null,
     loading: false,
     error: null,
 };
@@ -31,10 +27,10 @@ const workspaceSlice = createSlice({
                 state.activeWorkspace.activeTabId = action.payload;
             }
         },
-        setLoading: (state, action) => {
+        setWorkspaceLoading: (state, action) => {
             state.loading = action.payload;
         },
-        setError: (state, action) => {
+        setWorkspaceError: (state, action) => {
             state.error = action.payload;
         }
     }
@@ -45,8 +41,8 @@ export const {
     setActiveWorkspace,
     updateTabs,
     setActiveTab,
-    setLoading,
-    setError
+    setWorkspaceLoading,
+    setWorkspaceError
 } = workspaceSlice.actions;
 
 export default workspaceSlice.reducer;

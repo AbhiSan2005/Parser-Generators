@@ -5,10 +5,12 @@ import { simulateShiftReduceParsing } from '../utils/bottomup/shiftReduceEngine.
 
 export const createPlayground = async (req, res) => {
     try {
-        const { title, name, user_id } = req.body;
+        // Removed 'title' and added 'description' to map perfectly to the schema
+        const { name, description, user_id } = req.body;
 
         const newPlayground = new Playground({
-            name: name || title || 'Untitled Parser Playground',
+            name: name || 'Untitled Parser Playground',
+            description: description || 'A playground sandbox for custom compiler generation.',
             user_id,
             grammar_source: {
                 variables: [],
@@ -43,6 +45,24 @@ export const getUserPlaygrounds = async (req, res) => {
         res.status(200).json(playgrounds);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch user playgrounds', details: error.message });
+    }
+};
+
+export const updatePlayground = async (req, res) => {
+    try {
+        const { name, description } = req.body;
+
+        const updatedPlayground = await Playground.findOneAndUpdate(
+            { playground_id: req.params.id },
+            { $set: { name, description } },
+            { new: true }
+        );
+
+        if (!updatedPlayground) return res.status(404).json({ error: 'Playground not found' });
+
+        res.status(200).json(updatedPlayground);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update playground', details: error.message });
     }
 };
 
@@ -120,11 +140,9 @@ export const evaluateTestString = async (req, res) => {
     try {
         const { test_input } = req.body;
 
-        // 1. Fetch the playground using the custom 8-character ID
         const playground = await Playground.findOne({ playground_id: req.params.id });
         if (!playground) return res.status(404).json({ error: 'Playground not found' });
 
-        // 2. Ensure the parser has actually been compiled
         const parseTable = playground.compiled_data?.parse_table;
         const grammarSource = playground.grammar_source;
 
@@ -139,7 +157,6 @@ export const evaluateTestString = async (req, res) => {
             abstract_syntax_tree: null
         };
 
-        // 3. Run the Evaluation Engine
         if (test_input && test_input.trim() !== '') {
             try {
                 const tokens = tokenize(test_input, grammarSource.terminals);
@@ -157,7 +174,6 @@ export const evaluateTestString = async (req, res) => {
                     abstract_syntax_tree: result.abstract_syntax_tree
                 };
             } catch (err) {
-                // Catches lexical errors (e.g., unrecognized tokens)
                 sandboxState = {
                     test_input,
                     status: 'REJECTED',
@@ -167,11 +183,9 @@ export const evaluateTestString = async (req, res) => {
             }
         }
 
-        // 4. Save the results back to the database
         playground.evaluation_sandbox = sandboxState;
         const savedPlayground = await playground.save();
 
-        // 5. Send the AST and status back to the frontend
         res.status(200).json({
             message: 'Evaluation complete',
             sandbox: savedPlayground.evaluation_sandbox
