@@ -2,10 +2,8 @@ import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import { connectDB } from "./utils/connectDB.js";
-
 import userRoutes from "./routes/userRoutes.js";
 import llmRoutes from "./routes/llmRoutes.js";
-// import cfgRoutes from "./routes/cfgRoutes.js"; // remove this Abhiraj
 import workspaceRoutes from "./routes/workspaceRoutes.js";
 import algorithmRoutes from "./routes/algorithmRoutes.js";
 import playgroundRoutes from "./routes/playgroundRoutes.js"
@@ -22,7 +20,6 @@ app.use("/", userRoutes);
 app.use("/", workspaceRoutes);
 app.use("/", algorithmRoutes);
 app.use("/", llmRoutes);
-// app.use("/", cfgRoutes); // Remove
 app.use("/playgrounds", playgroundRoutes)
 
 app.get("/status", (req, res) => {
