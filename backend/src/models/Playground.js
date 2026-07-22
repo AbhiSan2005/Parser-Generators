@@ -28,7 +28,7 @@ const PlaygroundSchema = new mongoose.Schema({
     parser_type: {
         type: String,
         required: true,
-        enum: ['LL1', 'LR0', 'SLR1', 'LR1'], // Added LR0 here!
+        enum: ['LL1', 'LR0', 'SLR1'], // Added LR0 here!
         default: 'SLR1'
     },
     grammar_source: {

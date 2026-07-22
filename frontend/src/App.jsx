@@ -4,7 +4,8 @@ import MainLayout from './layouts/MainLayout';
 import Home from './pages/Home';
 import WorkspacesList from './pages/WorkspacesList';
 import PlaygroundsList from './pages/PlaygroundsList';
-import TabView from './pages/TabView'; // <-- Import the new view
+import TabView from './pages/TabView';
+import PlaygroundView from './pages/PlaygroundView'; // <-- Imported PlaygroundView
 
 function App() {
     return (
@@ -16,8 +17,9 @@ function App() {
                 <Route path="workspaces" element={<WorkspacesList />} />
                 <Route path="workspaces/:workspace_id" element={<TabView />} />
                 
-                {/* Playgrounds List */}
+                {/* Playgrounds List and Specific Playground Sandbox */}
                 <Route path="playgrounds" element={<PlaygroundsList />} />
+                <Route path="playgrounds/:id" element={<PlaygroundView />} />
             </Route>
         </Routes>
     );

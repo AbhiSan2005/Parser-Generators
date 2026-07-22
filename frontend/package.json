@@ -17,6 +17,7 @@
     "@viz-js/viz": "^3.28.0",
     "@xyflow/react": "^12.11.2",
     "axios": "^1.18.1",
+    "dagre": "^0.8.5",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-redux": "^9.3.0",

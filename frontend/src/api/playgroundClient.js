@@ -35,7 +35,7 @@ export const updatePlayground = async (playgroundId, playgroundData) => {
     return response.data;
 };
 
-export const evaluateTestString = async (playgroundId, testInput) => {
-    const response = await apiClient.post(`/playgrounds/${playgroundId}/evaluate`, { testInput });
+export const evaluateTestString = async (playgroundId, test_input) => {
+    const response = await apiClient.post(`/playgrounds/${playgroundId}/evaluate`, { test_input });
     return response.data;
 };
