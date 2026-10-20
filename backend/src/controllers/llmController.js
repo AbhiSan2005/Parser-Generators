@@ -4,9 +4,10 @@ import { parseCfgString } from "../utils/cfgParser.js";
 
 export const generateRegex = async (req, res) => {
     try {
-        const { description } = req.body;
-        
-        console.log("LLM Processing the Language: " + description);
+        const description = typeof req.body?.description === 'string' ? req.body.description.trim() : '';
+        if (!description) {
+            return res.status(400).json({ success: false, Error: 'A language description is required.' });
+        }
 
         const regexJSON = await generateRegexFromLLM(description);
 
@@ -15,27 +16,31 @@ export const generateRegex = async (req, res) => {
             data: regexJSON
         });
     } catch (error) {
-        console.log(`AI Helper Error: ${error}`);
-        res.json({ success: false, Error: error.message });
+        console.error('Regex generation failed:', error.message);
+        res.status(502).json({ success: false, Error: error.message });
     }
 };
 
 export const generateCfg = async (req, res) => {
     try {
-        const { description } = req.body;
-        
-        console.log("LLM Processing CFG for: " + description);
+        const description = typeof req.body?.description === 'string' ? req.body.description.trim() : '';
+        if (!description) {
+            return res.status(400).json({ success: false, Error: 'A language description is required.' });
+        }
 
         const rawCfgString = await generateCfgStringFromLLM(description);
 
         const completeCfg = parseCfgString(rawCfgString);
+        if (!completeCfg.start_variable || Object.keys(completeCfg.productions).length === 0) {
+            throw new Error('Gemini returned an invalid CFG. Please try a more specific description.');
+        }
 
         res.json({
             success: true,
             data: completeCfg
         });
     } catch (error) {
-        console.log(`CFG AI Helper Error: ${error}`);
-        res.json({ success: false, Error: error.message });
+        console.error('CFG generation failed:', error.message);
+        res.status(502).json({ success: false, Error: error.message });
     }
 };

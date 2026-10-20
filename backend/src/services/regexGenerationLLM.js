@@ -1,10 +1,4 @@
-import OpenAI from "openai";
-import "dotenv/config";
-
-const getAIClient = () => new OpenAI({
-    baseURL: 'https://integrate.api.nvidia.com/v1',
-    apiKey: process.env.NVIDIA_API_KEY || 'dummy_key'
-});
+import { generateGeminiText } from './geminiService.js';
 
 export const generateRegexFromLLM = async (description) => {
     const prompt =
@@ -63,34 +57,40 @@ export const generateRegexFromLLM = async (description) => {
         Rules:
         • Use only symbols from the detected alphabet.
         • If the language is not regular, set regex to "NONE".
-        • Do not include explanations.
-        • Output must be valid JSON.
+        • Do not include explanations or Markdown.
+        • Return only the requested JSON object.
 
         User Language Description: ${description}
     `;
 
+    const responseFormat = {
+        type: 'text',
+        mime_type: 'application/json',
+        schema: {
+            type: 'object',
+            properties: {
+                language_type: {
+                    type: 'string',
+                    enum: ['REGULAR', 'CONTEXT FREE', 'CONTEXT SENSITIVE', 'RECURSIVELY ENUMERABLE']
+                },
+                regex: { type: 'string' }
+            },
+            required: ['language_type', 'regex'],
+            additionalProperties: false
+        }
+    };
+
+    const responseText = await generateGeminiText(prompt, responseFormat);
+    let result;
     try {
-        const ai = getAIClient();
-        const payload = {
-            model: "z-ai/glm-5.2",
-            messages: [{ "role": "user", "content": prompt }],
-            temperature: 0.1,
-            top_p: 0.95,
-            chat_template_kwargs: { "thinking": true },
-            stream: false
-        };
-
-        const response = await ai.chat.completions.create(payload);
-
-        let finalJSON = response.choices[0].message.content.trim();
-
-        finalJSON = finalJSON.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-        finalJSON = finalJSON.replace(/```json|```/g, '').trim();
-
-        return JSON.parse(finalJSON);
+        result = JSON.parse(responseText.replace(/^```(?:json)?\s*|\s*```$/g, ''));
+    } catch {
+        throw new Error('Gemini returned an invalid regex response. Please try a more specific language description.');
     }
-    catch (error) {
-        console.error("LLM Error:", error.message);
-        throw new Error("Failed to generate Regex");
+
+    if (typeof result.regex !== 'string' || typeof result.language_type !== 'string') {
+        throw new Error('Gemini returned an incomplete regex response. Please try again.');
     }
+
+    return result;
 };

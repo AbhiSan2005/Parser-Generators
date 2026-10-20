@@ -26,12 +26,17 @@ app.use(express.json());
 app.use("/auth", authRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/", userRoutes);
+app.use("/api", userRoutes);
 
 // Workspaces, Algorithms, LLM, Playgrounds
 app.use("/", workspaceRoutes);
 app.use("/", algorithmRoutes);
 app.use("/", llmRoutes);
 app.use("/playgrounds", playgroundRoutes);
+app.use("/api", workspaceRoutes);
+app.use("/api", algorithmRoutes);
+app.use("/api", llmRoutes);
+app.use("/api/playgrounds", playgroundRoutes);
 
 app.get("/status", (req, res) => {
     res.json({

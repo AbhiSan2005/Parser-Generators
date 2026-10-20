@@ -1,20 +1,7 @@
-import React, { useEffect, useRef } from 'react';
-
-export const ALGORITHM_CONFIG = {
-    'REGEX_TO_ENFA': { label: 'Regex to ε-NFA', type: 'REGEX', target: 'ENFA' },
-    'REGEX_TO_NFA': { label: 'Regex to NFA', type: 'REGEX', target: 'NFA' },
-    'REGEX_TO_DFA': { label: 'Regex to DFA', type: 'REGEX', target: 'DFA' },
-    'REGEX_TO_MINDFA_HOPCROFT': { label: 'Regex to Minimized DFA', type: 'REGEX', target: 'MIN_DFA' },
-    
-    'ENFA_TO_NFA': { label: 'ε-NFA to NFA', type: 'MACHINE', target: 'NFA' },
-    'NFA_TO_DFA': { label: 'NFA to DFA', type: 'MACHINE', target: 'DFA' },
-    'ENFA_TO_DFA': { label: 'ε-NFA to DFA', type: 'MACHINE', target: 'DFA' },
-    'DFA_TO_MINDFA_HOPCROFT': { label: 'Minimize DFA (Hopcroft)', type: 'MACHINE', target: 'MIN_DFA' },
-    
-    'SIMPLIFY_CFG': { label: 'Simplify CFG', type: 'CFG', target: 'CFG' },
-    'CFG_TO_CNF': { label: 'CFG to CNF', type: 'CFG', target: 'CNF' },
-    'CYK_ALGORITHM': { label: 'CYK Algorithm', type: 'CFG_CYK', target: 'CYK' },
-};
+import { useEffect, useRef, useState } from 'react';
+import { generateCfgAI, generateRegexAI } from '../api/engineClient';
+import { ALGORITHM_CONFIG } from '../utils/algorithmConfig';
+import { WORKSPACE_PRESETS, formatGrammar } from '../utils/presets';
 
 const InputMenu = ({ 
     activeTabId,
@@ -24,12 +11,17 @@ const InputMenu = ({
     setAlgoInput, 
     testString,
     setTestString,
-    handleExecuteAlgo, 
-    isExecuting
+    handleExecuteAlgo,
+    isExecuting,
+    onPresetSelect
 }) => {
     // Persistent memory map across tabs
     const tabStateMapRef = useRef({});
     const prevTabIdRef = useRef(activeTabId);
+    const [aiPrompt, setAiPrompt] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [isApplyingPreset, setIsApplyingPreset] = useState(false);
+    const [aiError, setAiError] = useState('');
 
     // Synchronize & restore state whenever activeTabId changes
     useEffect(() => {
@@ -90,6 +82,57 @@ const InputMenu = ({
 
     const currentAlgoConfig = selectedAlgo ? ALGORITHM_CONFIG[selectedAlgo] : null;
     const isCyk = currentAlgoConfig?.type === 'CFG_CYK';
+    const isRegexInput = currentAlgoConfig?.type === 'REGEX';
+    const canEnterTestString = Boolean(currentAlgoConfig);
+
+    const applyPreset = async (presetId) => {
+        const preset = WORKSPACE_PRESETS.find(example => example.id === presetId);
+        if (!preset) return;
+
+        handleAlgoChange(preset.actionType);
+        handleInputChange(preset.input || '');
+        handleTestStringChange(preset.testString || '');
+        setAiError('');
+
+        if (!onPresetSelect) return;
+        setIsApplyingPreset(true);
+        try {
+            await onPresetSelect(preset);
+        } catch (error) {
+            setAiError(error.message || 'Could not load this machine preset.');
+        } finally {
+            setIsApplyingPreset(false);
+        }
+    };
+
+    const handleGenerateWithAI = async () => {
+        if (!aiPrompt.trim()) return;
+        setIsGenerating(true);
+        setAiError('');
+        try {
+            const result = isRegexInput
+                ? await generateRegexAI(aiPrompt.trim())
+                : await generateCfgAI(aiPrompt.trim());
+            if (!result?.success) throw new Error(result?.Error || 'Generation failed.');
+
+            if (isRegexInput) {
+                const regex = result.data?.regex;
+                if (!regex || regex === 'NONE') {
+                    throw new Error('This language is not regular, so no regular expression was returned.');
+                }
+                handleInputChange(regex);
+            } else {
+                const grammar = formatGrammar(result.data);
+                if (!grammar) throw new Error('The response did not contain a usable grammar.');
+                handleInputChange(grammar);
+            }
+            setAiPrompt('');
+        } catch (error) {
+            setAiError(error.response?.data?.Error || error.message || 'AI generation failed.');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
 
     const handleKeyDown = (e) => {
         if (e.key === 'Enter' && isCyk && !isExecuting) {
@@ -124,16 +167,31 @@ const InputMenu = ({
                     </select>
                 </div>
 
+                <div className="flex flex-col gap-2 w-full md:max-w-xs">
+                    <label className="text-sm font-bold text-mocha-subtext0 uppercase tracking-wider">Example preset</label>
+                    <select
+                        value=""
+                        disabled={!selectedAlgo || isApplyingPreset}
+                        onChange={(event) => applyPreset(event.target.value)}
+                        className="bg-mocha-crust border border-mocha-surface1 text-mocha-text rounded-lg p-3 outline-none focus:border-mocha-mauve disabled:opacity-50 cursor-pointer w-full"
+                    >
+                        <option value="">{selectedAlgo ? 'Choose an example...' : 'Select an algorithm first'}</option>
+                        {WORKSPACE_PRESETS.filter(preset => preset.actionType === selectedAlgo).map(preset => (
+                            <option key={preset.id} value={preset.id}>{preset.label}</option>
+                        ))}
+                    </select>
+                </div>
+
                 <button 
                     onClick={handleExecuteAlgo}
-                    disabled={!selectedAlgo || isExecuting}
+                    disabled={!selectedAlgo || isExecuting || isApplyingPreset}
                     className={`px-8 py-3 rounded-lg font-bold transition-all text-base h-[50px] shrink-0 ${
                         !selectedAlgo || isExecuting 
                         ? 'bg-mocha-surface0 text-mocha-surface2 cursor-not-allowed' 
                         : 'bg-mocha-green text-mocha-crust hover:bg-opacity-90 shadow-[0_0_20px_rgba(166,227,161,0.2)] hover:shadow-[0_0_25px_rgba(166,227,161,0.4)]'
                     }`}
                 >
-                    {isExecuting ? 'Processing...' : 'Run Algorithm'}
+                    {isApplyingPreset ? 'Loading preset...' : isExecuting ? 'Processing...' : 'Run Algorithm'}
                 </button>
             </div>
 
@@ -152,6 +210,10 @@ const InputMenu = ({
                                 placeholder="e.g., (a+b)*.a"
                                 className="w-full bg-mocha-crust border border-mocha-surface1 text-mocha-text rounded-lg p-3 outline-none focus:border-mocha-blue font-mono shadow-inner text-lg tracking-widest"
                             />
+                            <div className="flex gap-2">
+                                <input value={aiPrompt} onChange={(event) => setAiPrompt(event.target.value)} placeholder="Describe the language in plain English" className="min-w-0 flex-1 bg-mocha-crust border border-mocha-surface1 text-mocha-text rounded-md px-3 py-2 text-sm outline-none focus:border-mocha-mauve" />
+                                <button type="button" onClick={handleGenerateWithAI} disabled={!aiPrompt.trim() || isGenerating} className="shrink-0 rounded-md bg-mocha-mauve px-3 py-2 text-xs font-bold text-mocha-crust disabled:opacity-50">{isGenerating ? 'Generating...' : 'Ask AI'}</button>
+                            </div>
                         </>
                     )}
                     {currentAlgoConfig?.type?.startsWith('CFG') && (
@@ -163,6 +225,10 @@ const InputMenu = ({
                                 placeholder="S -> A B | B C&#10;A -> B A | a"
                                 className="w-full bg-mocha-crust border border-mocha-surface1 text-mocha-text rounded-lg p-3 outline-none focus:border-mocha-green font-mono min-h-[90px] shadow-inner custom-scrollbar"
                             />
+                            <div className="flex gap-2">
+                                <input value={aiPrompt} onChange={(event) => setAiPrompt(event.target.value)} placeholder="Describe the grammar's language" className="min-w-0 flex-1 bg-mocha-crust border border-mocha-surface1 text-mocha-text rounded-md px-3 py-2 text-sm outline-none focus:border-mocha-mauve" />
+                                <button type="button" onClick={handleGenerateWithAI} disabled={!aiPrompt.trim() || isGenerating} className="shrink-0 rounded-md bg-mocha-mauve px-3 py-2 text-xs font-bold text-mocha-crust disabled:opacity-50">{isGenerating ? 'Generating...' : 'Ask AI'}</button>
+                            </div>
                         </>
                     )}
                     {currentAlgoConfig?.type === 'MACHINE' && (
@@ -181,6 +247,7 @@ const InputMenu = ({
                             </div>
                         </>
                     )}
+                    {aiError && <p role="alert" className="text-xs text-mocha-red">{aiError}</p>}
                 </div>
 
                 {/* Right Column: String Validation Input */}
@@ -188,18 +255,18 @@ const InputMenu = ({
                     <label className="text-sm font-bold text-mocha-subtext0 uppercase tracking-wider flex items-center justify-between">
                         <span className="flex items-center gap-1.5"><span className="text-mocha-blue">🧪</span> String Validation</span>
                         <span className={`text-xs font-normal lowercase ${isCyk ? 'text-mocha-green' : 'text-mocha-surface2'}`}>
-                            {isCyk ? '(required for CYK)' : '(disabled)'}
+                            {isCyk ? '(required for CYK)' : canEnterTestString ? '(example input)' : '(select an algorithm)'}
                         </span>
                     </label>
                     <div className="flex gap-3">
                         <input 
                             type="text" 
-                            disabled={!isCyk}
+                            disabled={!canEnterTestString}
                             value={testString}
                             onChange={(e) => handleTestStringChange(e.target.value)}
                             onKeyDown={handleKeyDown}
                             placeholder="Enter string to evaluate (e.g. baaba)..."
-                            className={`flex-grow bg-mocha-crust border border-mocha-surface1 rounded-lg p-3 outline-none font-mono shadow-inner text-lg tracking-widest ${isCyk ? 'text-mocha-text focus:border-mocha-blue cursor-text' : 'text-mocha-surface2 cursor-not-allowed opacity-50'}`}
+                            className={`flex-grow bg-mocha-crust border border-mocha-surface1 rounded-lg p-3 outline-none font-mono shadow-inner text-lg tracking-widest ${canEnterTestString ? 'text-mocha-text focus:border-mocha-blue cursor-text' : 'text-mocha-surface2 cursor-not-allowed opacity-50'}`}
                         />
                         <button 
                             type="button"

@@ -66,8 +66,8 @@ export const generateBottomUpParser = (grammar_source, parser_type) => {
         },
         generated_code: {
             javascript: generated_code.javascript,
-            python: "", // reserved for future
-            cpp: ""     // reserved for future
+              python: generated_code.python,
+              cpp: generated_code.cpp
         }
     };
 };

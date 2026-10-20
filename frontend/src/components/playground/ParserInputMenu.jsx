@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { saveGrammar, compileParser, evaluateTestString } from '../../api/playgroundClient';
+import { generateCfgAI } from '../../api/engineClient';
 import { setActivePlayground } from '../../store/playgroundSlice';
+import { PLAYGROUND_PRESETS, formatGrammar } from '../../utils/presets';
 
 /**
  * Converts multiline CFG input string into the JSON structure expected by the backend engine.
@@ -74,6 +76,8 @@ const ParserInputMenu = ({ playground }) => {
     const [isCompiling, setIsCompiling] = useState(false);
     const [isEvaluating, setIsEvaluating] = useState(false);
     const [compileError, setCompileError] = useState(null);
+    const [aiPrompt, setAiPrompt] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
 
     // Sync state if playground changes
     useEffect(() => {
@@ -122,6 +126,32 @@ const ParserInputMenu = ({ playground }) => {
         }
     };
 
+    const handleGenerateWithAI = async () => {
+        if (!aiPrompt.trim()) return;
+        setIsGenerating(true);
+        setCompileError(null);
+        try {
+            const result = await generateCfgAI(aiPrompt.trim());
+            if (!result?.success) throw new Error(result?.Error || 'Generation failed.');
+            const generatedGrammar = formatGrammar(result.data);
+            if (!generatedGrammar) throw new Error('The response did not contain a usable grammar.');
+            setGrammarText(generatedGrammar);
+            setAiPrompt('');
+        } catch (error) {
+            setCompileError(error.response?.data?.Error || error.message || 'AI generation failed.');
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const applyGrammarPreset = (presetId) => {
+        const preset = PLAYGROUND_PRESETS.find(example => example.id === presetId);
+        if (!preset) return;
+        setGrammarText(preset.value);
+        setParserType(preset.parserType);
+        setTestInput(preset.testString);
+    };
+
     const handleEvaluate = async () => {
         if (!testInput) return;
         setIsEvaluating(true);
@@ -146,10 +176,14 @@ const ParserInputMenu = ({ playground }) => {
                 
                 {/* Left Column: CFG Rule Input & Compiler */}
                 <div className="flex flex-col gap-3 lg:border-r border-mocha-surface0 lg:pr-6">
-                    <div className="flex justify-between items-end">
+                    <div className="flex flex-wrap justify-between items-end gap-2">
                         <label className="text-xs font-bold text-mocha-mauve uppercase tracking-wider">
                             Context-Free Grammar
                         </label>
+                        <select defaultValue="" onChange={(event) => applyGrammarPreset(event.target.value)} className="bg-mocha-crust border border-mocha-surface1 text-mocha-subtext0 rounded-md p-1.5 text-xs">
+                            <option value="">Load example...</option>
+                            {PLAYGROUND_PRESETS.map(preset => <option key={preset.id} value={preset.id}>{preset.label}</option>)}
+                        </select>
                         <select 
                             value={parserType}
                             onChange={(e) => setParserType(e.target.value)}
@@ -167,6 +201,11 @@ const ParserInputMenu = ({ playground }) => {
                         placeholder="E -> E + T | T&#10;T -> T * F | F&#10;F -> ( E ) | id"
                         className="w-full bg-mocha-crust border border-mocha-surface1 text-mocha-text rounded-lg p-3 outline-none focus:border-mocha-mauve font-mono text-sm min-h-[140px] shadow-inner custom-scrollbar"
                     />
+
+                    <div className="flex gap-2">
+                        <input value={aiPrompt} onChange={(event) => setAiPrompt(event.target.value)} placeholder="Describe the language for a CFG" className="min-w-0 flex-1 bg-mocha-crust border border-mocha-surface1 text-mocha-text rounded-md px-3 py-2 text-sm outline-none focus:border-mocha-mauve" />
+                        <button type="button" onClick={handleGenerateWithAI} disabled={!aiPrompt.trim() || isGenerating} className="shrink-0 rounded-md bg-mocha-mauve px-3 py-2 text-xs font-bold text-mocha-crust disabled:opacity-50">{isGenerating ? 'Generating...' : 'Ask AI'}</button>
+                    </div>
 
                     {compileError && (
                         <div className="p-3 bg-mocha-red/10 border border-mocha-red/30 rounded-lg text-mocha-red text-xs font-mono">

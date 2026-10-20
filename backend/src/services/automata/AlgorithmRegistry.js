@@ -10,6 +10,7 @@ import {
 import { CfgSimplificationService } from "../cfgSimplificationService.js";
 import { CfgToCnfService } from "../cfgToCnfService.js";
 import { CykService } from "../cykService.js";
+import { minimize_dfa_myhill_nerode } from "../../utils/minimize_dfa_MyhillNerode.js";
 
 export const AlgorithmRegistry = {
 
@@ -19,6 +20,7 @@ export const AlgorithmRegistry = {
     'NFA_TO_DFA': (data) => NfaToDfaService(data),
     'ENFA_TO_DFA': (data) => EnfaToDfaService(data),
     'DFA_TO_MINDFA_HOPCROFT': (data) => MinimizeDfaServiceHopcrofts(data),
+    'DFA_TO_MINDFA_MYHILL_NERODE': (data) => minimize_dfa_myhill_nerode(data),
     'REGEX_TO_NFA': (regexString) => {
         const enfa = RegexToEnfaService(regexString);
         return EnfaToNfaService(enfa);
@@ -31,6 +33,11 @@ export const AlgorithmRegistry = {
         const enfa = RegexToEnfaService(regexString);
         const dfa = EnfaToDfaService(enfa);
         return MinimizeDfaServiceHopcrofts(dfa);
+    },
+    'REGEX_TO_MINDFA_MYHILL_NERODE': (regexString) => {
+        const enfa = RegexToEnfaService(regexString);
+        const dfa = EnfaToDfaService(enfa);
+        return minimize_dfa_myhill_nerode(dfa);
     },
     'NFA_TO_MINDFA_HOPCROFT': (nfaData) => {
         const dfa = NfaToDfaService(nfaData);

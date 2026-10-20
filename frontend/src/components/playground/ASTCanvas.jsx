@@ -1,5 +1,5 @@
 // src/components/playground/ASTCanvas.jsx
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { ReactFlow, Background, Controls, useNodesState, useEdgesState, BackgroundVariant } from '@xyflow/react';
 import dagre from 'dagre';
 import '@xyflow/react/dist/style.css';
@@ -10,10 +10,10 @@ const nodeTypes = { astNode: ASTNode };
 const getLayoutedElements = (nodes, edges, direction = 'TB') => {
     const dagreGraph = new dagre.graphlib.Graph();
     dagreGraph.setDefaultEdgeLabel(() => ({}));
-    dagreGraph.setGraph({ rankdir: direction, ranksep: 60, nodesep: 40 });
+    dagreGraph.setGraph({ rankdir: direction, ranksep: 82, nodesep: 52, marginx: 32, marginy: 32 });
 
     nodes.forEach((node) => {
-        dagreGraph.setNode(node.id, { width: 80, height: 40 });
+        dagreGraph.setNode(node.id, { width: node.data.width, height: node.data.height });
     });
 
     edges.forEach((edge) => {
@@ -29,8 +29,8 @@ const getLayoutedElements = (nodes, edges, direction = 'TB') => {
         return {
             ...node,
             position: {
-                x: (nodeWithPosition?.x ?? 0) - 40,
-                y: (nodeWithPosition?.y ?? 0) - 20,
+                x: (nodeWithPosition?.x ?? 0) - node.data.width / 2,
+                y: (nodeWithPosition?.y ?? 0) - node.data.height / 2,
             },
         };
     });
@@ -63,11 +63,18 @@ const ASTCanvas = ({ sandboxData }) => {
                 const currentId = `ast_node_${nodeIdCounter++}`;
                 const nodeLabel = node.name || node.label || 'Node';
                 const isTerminal = !node.children || node.children.length === 0;
+                const nodeWidth = Math.min(176, Math.max(58, String(nodeLabel).length * 9 + 28));
 
                 rawNodes.push({
                     id: currentId,
                     type: 'astNode',
-                    data: { label: String(nodeLabel), isTerminal },
+                    data: {
+                        label: String(nodeLabel),
+                        isTerminal,
+                        width: nodeWidth,
+                        height: 48
+                    },
+                    style: { width: nodeWidth, height: 48 },
                     position: { x: 0, y: 0 }
                 });
 
@@ -76,7 +83,8 @@ const ASTCanvas = ({ sandboxData }) => {
                         id: `edge_${parentId}_${currentId}`,
                         source: parentId,
                         target: currentId,
-                        type: 'smoothstep'
+                        type: 'smoothstep',
+                        style: { stroke: '#7f849c', strokeWidth: 1.6 }
                     });
                 }
 
@@ -158,7 +166,7 @@ const ASTCanvas = ({ sandboxData }) => {
                 Parse Tree (AST)
             </div>
             
-            {nodes.length === 0 ? (
+                    {nodes.length === 0 ? (
                 <div className="w-full h-full flex items-center justify-center">
                     {renderOverlayMessage()}
                 </div>
@@ -170,6 +178,7 @@ const ASTCanvas = ({ sandboxData }) => {
                     onEdgesChange={onEdgesChange}
                     nodeTypes={nodeTypes}
                     fitView
+                    fitViewOptions={{ padding: 0.18, minZoom: 0.35, maxZoom: 1.25 }}
                     colorMode="dark"
                     proOptions={{ hideAttribution: true }}
                 >

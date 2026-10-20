@@ -1,5 +1,5 @@
 // src/components/playground/ParserAnalysisPanel.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const ParserAnalysisPanel = ({ compiledData, type }) => {
     const [activeTab, setActiveTab] = useState('TABLE'); // 'TABLE' | 'SETS' | 'ITEM_SETS' | 'CONFLICTS'
@@ -14,7 +14,7 @@ const ParserAnalysisPanel = ({ compiledData, type }) => {
         );
     }
 
-    const { analysis, states, transitions } = compiledData.item_sets || {};
+    const { analysis, states } = compiledData.item_sets || {};
     const parseTable = compiledData.parse_table || {};
     const conflicts = compiledData.conflicts || [];
 
@@ -80,22 +80,22 @@ const ParserAnalysisPanel = ({ compiledData, type }) => {
                     <div className="flex flex-col gap-4">
                         {type === 'LL1' ? (
                             /* LL(1) Parsing Table */
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse border border-mocha-surface0">
+                            <div className="overflow-x-auto rounded-lg border border-mocha-surface1 shadow-inner">
+                                <table className="min-w-full text-left border-collapse text-xs">
                                     <thead>
-                                        <tr className="bg-mocha-crust text-mocha-mauve">
-                                            <th className="p-2 border border-mocha-surface0">Non-Terminal</th>
-                                            <th className="p-2 border border-mocha-surface0">Lookahead Entries</th>
+                                        <tr className="sticky top-0 z-10 bg-mocha-crust text-mocha-mauve">
+                                            <th className="p-3 border-b border-r border-mocha-surface1">Non-Terminal</th>
+                                            <th className="p-3 border-b border-mocha-surface1">Lookahead Entries</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {Object.entries(parseTable).map(([variable, entryMap]) => (
-                                            <tr key={variable} className="border-b border-mocha-surface0 hover:bg-mocha-crust/30">
-                                                <td className="p-2 font-bold text-mocha-yellow border border-mocha-surface0">{variable}</td>
-                                                <td className="p-2 border border-mocha-surface0">
+                                        {Object.entries(parseTable).map(([variable, entryMap], rowIndex) => (
+                                            <tr key={variable} className={`border-b border-mocha-surface0 hover:bg-mocha-surface0/40 ${rowIndex % 2 === 0 ? 'bg-mocha-base/30' : 'bg-mocha-mantle/40'}`}>
+                                                <td className="sticky left-0 border-r border-mocha-surface1 px-3 py-2 font-bold text-mocha-yellow">{variable}</td>
+                                                <td className="p-3">
                                                     <div className="flex flex-wrap gap-2">
                                                         {Object.entries(entryMap || {}).map(([terminal, prod]) => (
-                                                            <span key={terminal} className="px-2 py-1 bg-mocha-crust border border-mocha-surface0 rounded text-xs">
+                                                            <span key={terminal} className="px-2.5 py-1.5 bg-mocha-crust border border-mocha-surface1 rounded-md text-xs shadow-sm">
                                                                 <span className="text-mocha-green font-bold">{terminal}</span> → {variable} → {Array.isArray(prod) ? prod.join(' ') : prod}
                                                             </span>
                                                         ))}
@@ -108,20 +108,20 @@ const ParserAnalysisPanel = ({ compiledData, type }) => {
                             </div>
                         ) : (
                             /* Bottom-Up Action/GOTO Table */
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse border border-mocha-surface0 text-xs">
+                            <div className="overflow-x-auto rounded-lg border border-mocha-surface1 shadow-inner">
+                                <table className="min-w-[680px] w-full text-left border-collapse text-xs">
                                     <thead>
-                                        <tr className="bg-mocha-crust text-mocha-mauve">
-                                            <th className="p-2 border border-mocha-surface0">State</th>
-                                            <th className="p-2 border border-mocha-surface0">Action Table</th>
-                                            <th className="p-2 border border-mocha-surface0">GOTO Table</th>
+                                        <tr className="sticky top-0 z-10 bg-mocha-crust text-mocha-mauve">
+                                            <th className="p-3 border-b border-r border-mocha-surface1">State</th>
+                                            <th className="p-3 border-b border-r border-mocha-surface1">Action Table</th>
+                                            <th className="p-3 border-b border-mocha-surface1">GOTO Table</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {Object.keys(parseTable.action || {}).map((stateId) => (
-                                            <tr key={stateId} className="border-b border-mocha-surface0 hover:bg-mocha-crust/30">
-                                                <td className="p-2 font-bold text-mocha-blue border border-mocha-surface0">I{stateId}</td>
-                                                <td className="p-2 border border-mocha-surface0">
+                                        {Object.keys(parseTable.action || {}).map((stateId, rowIndex) => (
+                                            <tr key={stateId} className={`border-b border-mocha-surface0 hover:bg-mocha-surface0/40 ${rowIndex % 2 === 0 ? 'bg-mocha-base/30' : 'bg-mocha-mantle/40'}`}>
+                                                <td className="sticky left-0 border-r border-mocha-surface1 px-3 py-2 font-bold text-mocha-blue">I{stateId}</td>
+                                                <td className="p-3 border-r border-mocha-surface1">
                                                     <div className="flex flex-wrap gap-1.5">
                                                         {Object.entries(parseTable.action[stateId] || {}).map(([term, act]) => (
                                                             <span key={term} className="px-1.5 py-0.5 bg-mocha-crust border border-mocha-surface0 rounded text-xs">
@@ -130,7 +130,7 @@ const ParserAnalysisPanel = ({ compiledData, type }) => {
                                                         ))}
                                                     </div>
                                                 </td>
-                                                <td className="p-2 border border-mocha-surface0">
+                                                <td className="p-3">
                                                     <div className="flex flex-wrap gap-1.5">
                                                         {Object.entries(parseTable.goto[stateId] || {}).map(([varName, targetState]) => (
                                                             <span key={varName} className="px-1.5 py-0.5 bg-mocha-crust border border-mocha-surface0 rounded text-xs">

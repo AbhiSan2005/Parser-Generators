@@ -14,8 +14,6 @@ services:
       - PORT=5000
       - MONGO_URI=${MONGO_URI:-mongodb+srv://Karan_30:HLJkZWFCF3OtQoko@toccluster.oekk5lu.mongodb.net/TocProjectDB}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
-      - NVIDIA_API_KEY=${NVIDIA_API_KEY:-}
     networks:
       - dfa-network
 

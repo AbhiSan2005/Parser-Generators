@@ -1,6 +1,8 @@
 export const simulateLL1 = (parsingTable, startVariable, tokens) => {
     const steps = [];
     const stack = ['$', startVariable];
+    const parseRoot = { name: startVariable, children: [] };
+    const treeStack = [{ symbol: '$', node: null }, { symbol: startVariable, node: parseRoot }];
     let cursor = 0;
     let success = false;
 
@@ -23,6 +25,7 @@ export const simulateLL1 = (parsingTable, startVariable, tokens) => {
         // Base Case: Both stack and input are empty ($)
         if (top === '$' && lookahead === '$') {
             stack.pop();
+            treeStack.pop();
             success = true;
             recordStep("Accept: Input successfully parsed.");
             break;
@@ -31,6 +34,7 @@ export const simulateLL1 = (parsingTable, startVariable, tokens) => {
         // Case 1: Stack top matches the lookahead terminal
         if (top === lookahead) {
             stack.pop();
+            treeStack.pop();
             cursor++;
             recordStep(`Matched terminal '${top}'. Advancing input.`, top);
         } 
@@ -39,14 +43,23 @@ export const simulateLL1 = (parsingTable, startVariable, tokens) => {
         else if (parsingTable[top] && parsingTable[top][lookahead]) {
             const rule = parsingTable[top][lookahead];
             stack.pop();
+            const parent = treeStack.pop().node;
             
             const ruleStr = rule.length === 1 && rule[0] === 'ε' ? 'ε' : rule.join(' ');
             recordStep(`Applied rule: ${top} -> ${ruleStr}. Popped ${top}.`);
 
             // Push the rule onto the stack in reverse order
-            if (!(rule.length === 1 && rule[0] === 'ε')) {
-                for (let i = rule.length - 1; i >= 0; i--) {
-                    stack.push(rule[i]);
+            if (rule.length === 1 && rule[0] === 'ε') {
+                parent.children.push({ name: 'ε', children: [] });
+            } else {
+                const childEntries = rule.map(symbol => ({
+                    symbol,
+                    node: { name: symbol, children: [] }
+                }));
+                parent.children.push(...childEntries.map(entry => entry.node));
+                for (let i = childEntries.length - 1; i >= 0; i--) {
+                    stack.push(childEntries[i].symbol);
+                    treeStack.push(childEntries[i]);
                 }
                 recordStep(`Pushed [${rule.join(', ')}] reversed onto the stack.`);
             }
@@ -61,6 +74,7 @@ export const simulateLL1 = (parsingTable, startVariable, tokens) => {
 
     return {
         isAccepted: success,
-        steps: steps
+        steps,
+        abstract_syntax_tree: success ? parseRoot : null
     };
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import { Fragment } from 'react';
 
 /**
  * Robustly parses CYK matrix from multiple possible structures:
@@ -113,19 +113,16 @@ const renderPartitions = (partitions) => {
                 Grammar State at Step:
             </span>
             {Object.entries(partitions).map(([lhs, rhsList]) => {
-                let formattedRhs = "";
-                if (Array.isArray(rhsList)) {
-                    formattedRhs = rhsList.map(rule => {
+                const formattedRhs = Array.isArray(rhsList)
+                    ? rhsList.map(rule => {
                         if (Array.isArray(rule)) {
                             return rule.length === 0 ? 'ε' : rule.join(' ');
                         } else if (typeof rule === 'string') {
                             return rule === '' ? 'ε' : rule;
                         }
                         return String(rule);
-                    }).join(' | ');
-                } else {
-                    formattedRhs = String(rhsList);
-                }
+                    }).join(' | ')
+                    : String(rhsList);
 
                 return (
                     <div key={lhs} className="flex items-start gap-2">
@@ -478,6 +475,80 @@ const MachineDescription = ({ machineData, automatonType }) => {
                     </span>
                 </div>
             </div>
+
+            {machineData?.minimization_table?.cells && (
+                <section className="flex flex-col gap-3">
+                    <div>
+                        <h4 className="text-sm font-bold text-mocha-mauve">Myhill-Nerode Distinguishability Table</h4>
+                        <p className="text-xs text-mocha-subtext0 mt-1">Marked pairs are distinguishable; unmarked pairs belong to the same equivalence class.</p>
+                    </div>
+                    <div className="overflow-x-auto rounded-lg border border-mocha-surface1">
+                        <div
+                            role="table"
+                            aria-label="Myhill-Nerode distinguishability table"
+                            className="grid w-max bg-mocha-crust text-center text-xs"
+                            style={{
+                                gridTemplateColumns: `repeat(${machineData.minimization_table.states.length + 1}, minmax(68px, 1fr))`,
+                                gridTemplateRows: `repeat(${machineData.minimization_table.states.length + 1}, minmax(36px, auto))`
+                            }}
+                        >
+                            {machineData.minimization_table.states.slice(0, -1).map((state, index) => (
+                                <div
+                                    key={`left-${state}`}
+                                    role="rowheader"
+                                    className="border-b border-r border-mocha-surface1 bg-mocha-mantle px-3 py-2 text-left font-mono text-mocha-peach"
+                                    style={{ gridRow: index + 2, gridColumn: 1 }}
+                                >
+                                    {state}
+                                </div>
+                            ))}
+                            {machineData.minimization_table.states.slice(1).map((state, offset) => (
+                                <div
+                                    key={`bottom-${state}`}
+                                    role="columnheader"
+                                    className="border-b border-r border-mocha-surface1 bg-mocha-mantle px-3 py-2 font-mono text-mocha-peach"
+                                    style={{ gridRow: machineData.minimization_table.states.length + 1, gridColumn: offset + 2 }}
+                                >
+                                    {state}
+                                </div>
+                            ))}
+                            {machineData.minimization_table.states.slice(0, -1).map((leftState, leftIndex) => (
+                                <Fragment key={`pairs-${leftState}`}>
+                                    {machineData.minimization_table.states.slice(leftIndex + 1).map((rightState, offset) => {
+                                        const rightIndex = leftIndex + offset + 1;
+                                        const cell = machineData.minimization_table.cells[rightIndex]?.[leftIndex];
+                                        return (
+                                            <div
+                                                key={`${leftState}-${rightState}`}
+                                                role="cell"
+                                                aria-label={`${leftState}, ${rightState}: ${cell?.distinguishable ? `distinguishable by ${cell.witness}` : 'equivalent'}`}
+                                                title={cell?.reason || 'Equivalent states'}
+                                                className={`border-b border-r border-mocha-surface1/60 px-3 py-2 ${cell?.distinguishable ? 'text-mocha-red' : 'font-bold text-mocha-green'}`}
+                                                style={{ gridRow: leftIndex + 2, gridColumn: rightIndex + 1 }}
+                                            >
+                                                {cell?.distinguishable
+                                                    ? <><span className="font-bold">{cell.witness}</span><span className="ml-1 text-mocha-subtext0">(R{cell.round})</span></>
+                                                    : 'Same'}
+                                            </div>
+                                        );
+                                    })}
+                                </Fragment>
+                            ))}
+                        </div>
+                    </div>
+                    <p className="text-xs text-mocha-subtext0">Witnesses show a string accepted from one state and rejected from the other. R0 marks final/non-final pairs.</p>
+                    <div className="flex flex-col gap-2 border-l border-mocha-surface1 pl-3">
+                        {machineData.minimization_table.rounds.map(round => (
+                            <div key={round.round} className="text-xs text-mocha-subtext0">
+                                <span className="mr-2 font-bold text-mocha-mauve">Round {round.round}</span>
+                                {round.round === 0
+                                    ? `Marked ${round.marked_pairs.length} final/non-final pairs.`
+                                    : round.marked_pairs.map(pair => `${pair.left} / ${pair.right} via '${pair.via}'`).join('; ')}
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {stateMappings && Object.keys(stateMappings).length > 0 && (
                 <div className="flex flex-col gap-2">

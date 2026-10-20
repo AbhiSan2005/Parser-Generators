@@ -118,9 +118,9 @@ export const compileParser = async (req, res) => {
                     item_sets: {}, // LL(1) does not use item sets
                     parse_table: topDownResult.parser_data.parsing_table,
                     generated_code: {
-                        javascript: topDownResult.parser_data.generated_code || '',
-                        python: '',
-                        cpp: ''
+                        javascript: topDownResult.parser_data.generated_code?.javascript || '',
+                        python: topDownResult.parser_data.generated_code?.python || '',
+                        cpp: topDownResult.parser_data.generated_code?.cpp || ''
                     }
                 };
             } else {
@@ -192,7 +192,7 @@ export const evaluateTestString = async (req, res) => {
                         test_input,
                         status: result.isAccepted ? 'ACCEPTED' : 'REJECTED',
                         error_message: result.isAccepted ? null : 'Syntax error encountered during LL(1) parsing.',
-                        abstract_syntax_tree: result.steps // For LL1, we store the step-by-step frames here
+                        abstract_syntax_tree: result.abstract_syntax_tree
                     };
                 } else {
                     result = simulateShiftReduceParsing(

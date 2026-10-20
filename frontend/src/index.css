@@ -44,3 +44,247 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-mocha-surface1;
 }
+
+.home-shell {
+  background:
+    linear-gradient(118deg, rgba(24, 24, 37, 0.94), rgba(30, 30, 46, 0.96) 52%, rgba(25, 34, 39, 0.94)),
+    var(--color-mocha-base);
+}
+
+.home-grid-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.19;
+  background-image: linear-gradient(rgba(166, 227, 161, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(137, 180, 250, 0.12) 1px, transparent 1px);
+  background-size: 52px 52px;
+  mask-image: linear-gradient(to bottom, black, transparent 92%);
+}
+
+.home-scanline {
+  position: absolute;
+  z-index: 0;
+  top: -30%;
+  left: 0;
+  width: 100%;
+  height: 24%;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(148, 226, 213, 0.045), transparent);
+  animation: home-scan 12s linear infinite;
+}
+
+.home-brand-mark {
+  display: flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: 1px solid rgba(148, 226, 213, 0.46);
+  background: rgba(17, 17, 27, 0.72);
+}
+
+.home-brand-mark span {
+  width: 4px;
+  border-radius: 3px;
+  background: #94e2d5;
+  animation: home-mark-pulse 2.4s ease-in-out infinite alternate;
+}
+
+.home-brand-mark span:nth-child(1) { height: 9px; }
+.home-brand-mark span:nth-child(2) { height: 17px; animation-delay: 0.25s; }
+.home-brand-mark span:nth-child(3) { height: 12px; animation-delay: 0.5s; }
+
+.home-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #a6e3a1;
+  box-shadow: 0 0 12px rgba(166, 227, 161, 0.65);
+}
+
+.home-copy-reveal,
+.home-graph-reveal {
+  animation: home-rise 650ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.home-graph-reveal { animation-delay: 120ms; }
+
+.home-primary-action,
+.home-secondary-action {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 700;
+  transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+.home-primary-action {
+  color: #11111b;
+  background: #a6e3a1;
+}
+
+.home-primary-action:hover { transform: translateY(-2px); background: #b9efb3; }
+
+.home-secondary-action {
+  color: #cdd6f4;
+  border-color: #585b70;
+  background: rgba(17, 17, 27, 0.56);
+}
+
+.home-secondary-action:hover { transform: translateY(-2px); border-color: #89b4fa; }
+
+.home-graph-heading {
+  min-height: 62px;
+  padding: 0 4px 12px;
+  border-bottom: 1px solid rgba(69, 71, 90, 0.75);
+}
+
+.home-graph-stage {
+  position: relative;
+  height: 338px;
+  overflow: hidden;
+  border-right: 1px solid rgba(69, 71, 90, 0.7);
+  border-bottom: 1px solid rgba(69, 71, 90, 0.7);
+  border-left: 1px solid rgba(69, 71, 90, 0.7);
+  background-color: rgba(17, 17, 27, 0.82);
+  background-image: linear-gradient(rgba(69, 71, 90, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(69, 71, 90, 0.12) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.home-graph-stage .react-flow { background: transparent; }
+.home-graph-stage .react-flow__pane { cursor: default; }
+.home-graph-stage .react-flow__edge-path { stroke-width: 2px; }
+.home-graph-stage .home-edge-a .react-flow__edge-path { stroke: #94e2d5; filter: drop-shadow(0 0 4px rgba(148, 226, 213, 0.36)); }
+.home-graph-stage .home-edge-b .react-flow__edge-path { stroke: #89b4fa; }
+.home-graph-stage .home-edge-a .react-flow__arrowhead { fill: #94e2d5; }
+.home-graph-stage .home-edge-b .react-flow__arrowhead { fill: #89b4fa; }
+.home-graph-stage .react-flow__edge-text { fill: #cdd6f4; font-family: "JetBrains Mono", monospace; font-size: 12px; }
+.home-graph-stage .react-flow__edge-textbg { fill: #11111b; }
+
+.home-state-node {
+  position: relative;
+  display: flex;
+  width: 108px;
+  height: 98px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #89b4fa;
+  border-radius: 50%;
+  color: #cdd6f4;
+  background: #202438;
+  box-shadow: 0 0 0 7px rgba(137, 180, 250, 0.055), 0 9px 26px rgba(0, 0, 0, 0.24);
+  animation: home-state-breathe 3.8s ease-in-out infinite;
+}
+
+.home-state-accepting {
+  border: 3px double #a6e3a1;
+  color: #a6e3a1;
+  background: #1c302d;
+  box-shadow: 0 0 0 7px rgba(166, 227, 161, 0.075), 0 9px 30px rgba(166, 227, 161, 0.12);
+  animation-delay: 1.2s;
+}
+
+.home-state-node .react-flow__handle { width: 5px; height: 5px; border: 0; opacity: 0; }
+.home-state-name { font-family: "JetBrains Mono", monospace; font-size: 25px; font-weight: 700; }
+.home-state-kind { margin-top: 1px; font-family: "JetBrains Mono", monospace; font-size: 8px; letter-spacing: 0.08em; }
+.home-state-arrow { position: absolute; top: -18px; left: -30px; color: #94e2d5; font: 9px "JetBrains Mono", monospace; }
+.home-loop-label { position: absolute; z-index: 10; transform: translate(-50%, -50%); color: #cdd6f4; font: 12px "JetBrains Mono", monospace; pointer-events: none; }
+.home-graph-coordinate { position: absolute; z-index: 5; color: #585b70; font: 9px "JetBrains Mono", monospace; pointer-events: none; }
+.home-coordinate-one { bottom: 12px; left: 14px; }
+.home-coordinate-two { right: 14px; bottom: 12px; }
+
+.home-graph-footer {
+  position: absolute;
+  right: 14px;
+  bottom: 10px;
+  left: 14px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 38px;
+  padding: 4px 8px;
+  border-top: 1px solid rgba(69, 71, 90, 0.5);
+  background: rgba(17, 17, 27, 0.94);
+  color: #585b70;
+  font: 9px "JetBrains Mono", monospace;
+  pointer-events: none;
+}
+
+.home-input-tape { display: flex; align-items: center; gap: 4px; }
+.home-input-tape b { display: grid; width: 21px; height: 21px; place-items: center; border: 1px solid #45475a; color: #cdd6f4; background: #181825; font-weight: 500; }
+.home-input-tape i { color: #94e2d5; font-style: normal; animation: home-tape-caret 900ms step-end infinite; }
+.home-graph-caption span { white-space: nowrap; }
+
+.home-workflow-step {
+  position: relative;
+  display: flex;
+  min-height: 118px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 18px 42px 18px 20px;
+  border-right: 1px solid rgba(69, 71, 90, 0.7);
+  transition: background-color 180ms ease;
+}
+
+.home-workflow-step:first-child { padding-left: 0; }
+.home-workflow-step:last-child { border-right: 0; }
+.home-workflow-step:hover { background: rgba(49, 50, 68, 0.3); }
+.home-step-index { color: #94e2d5; font: 9px "JetBrains Mono", monospace; }
+.home-step-title { color: #cdd6f4; font-size: 14px; font-weight: 700; }
+.home-step-detail { color: #a6adc8; font-size: 11px; }
+.home-step-arrow { position: absolute; top: 50%; right: 20px; color: #585b70; transform: translateY(-50%); transition: color 160ms ease, transform 160ms ease; }
+.home-workflow-step:hover .home-step-arrow { color: #a6e3a1; transform: translate(3px, -50%); }
+
+@keyframes home-scan {
+  from { transform: translateY(0); }
+  to { transform: translateY(560%); }
+}
+
+@keyframes home-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes home-mark-pulse {
+  from { opacity: 0.52; }
+  to { opacity: 1; }
+}
+
+@keyframes home-state-breathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes home-tape-caret {
+  50% { opacity: 0; }
+}
+
+@media (max-width: 767px) {
+  .home-graph-stage { height: 300px; }
+  .home-workflow-step,
+  .home-workflow-step:first-child { min-height: 96px; padding-left: 14px; border-right: 0; border-bottom: 1px solid rgba(69, 71, 90, 0.7); }
+  .home-workflow-step:last-child { border-bottom: 0; }
+  .home-graph-caption { flex-wrap: wrap; justify-content: flex-start; gap: 8px 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-scanline,
+  .home-brand-mark span,
+  .home-copy-reveal,
+  .home-graph-reveal,
+  .home-state-node,
+  .home-input-tape i { animation: none; }
+  .home-primary-action,
+  .home-secondary-action,
+  .home-workflow-step,
+  .home-step-arrow { transition: none; }
+}

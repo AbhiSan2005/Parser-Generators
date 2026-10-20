@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { setActiveWorkspace, setActiveTab } from '../store/workspaceSlice';
-import { getWorkspaceById, createTab } from '../api/workspaceClient';
+import { getWorkspaceById, createTab, updateTab } from '../api/workspaceClient';
 import { executeAlgorithm } from '../api/engineClient';
 import AutomataCanvas from '../components/canvas/AutomataCanvas';
-import InputMenu, { ALGORITHM_CONFIG } from '../components/InputMenu';
+import InputMenu from '../components/InputMenu';
+import { ALGORITHM_CONFIG } from '../utils/algorithmConfig';
 import MachineDescription from '../components/MachineDescription';
 
 // Make sure the path matches where you stored the parsing utility
@@ -111,6 +112,18 @@ const TabView = () => {
 
     const handleLocateGraph = () => {
         setLocateTrigger(prev => prev + 1);
+    };
+
+    const handlePresetSelect = async (preset) => {
+        const tabSource = preset.kind === 'MACHINE'
+            ? { automatonType: preset.machineType, machine_data: preset.machineData }
+            : { automatonType: preset.kind === 'REGEX' ? 'REGEX' : 'EMPTY', machine_data: {} };
+        const response = await updateTab(workspace_id, activeTabId, {
+            ...tabSource
+        });
+        if (response?.success === false) throw new Error(response.Error || 'Preset could not be loaded.');
+        dispatch(setActiveWorkspace(response?.data || response));
+        setViewMode('CANVAS');
     };
 
     const handleExecuteAlgo = async () => {
@@ -317,6 +330,7 @@ const TabView = () => {
                         setTestString={setTestString}
                         handleExecuteAlgo={handleExecuteAlgo}
                         isExecuting={isExecuting}
+                        onPresetSelect={handlePresetSelect}
                     />
                 </>
             )}
