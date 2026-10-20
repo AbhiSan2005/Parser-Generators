@@ -1,9 +1,9 @@
 import OpenAI from "openai";
 import "dotenv/config";
 
-const ai = new OpenAI({
+const getAIClient = () => new OpenAI({
     baseURL: 'https://integrate.api.nvidia.com/v1',
-    apiKey: process.env.NVIDIA_API_KEY
+    apiKey: process.env.NVIDIA_API_KEY || 'dummy_key'
 });
 
 export const generateCfgStringFromLLM = async (description) => {
@@ -41,6 +41,7 @@ export const generateCfgStringFromLLM = async (description) => {
     `;
 
     try {
+        const ai = getAIClient();
         const payload = {
             model: "z-ai/glm-5.2", 
             messages: [{ "role": "user", "content": prompt }],

@@ -1,11 +1,11 @@
-import { augmentGrammar } from '../utils/bottomup/lrAugmenter.js';
+import { augmentGrammar } from '../utils/bottomUp/lrAugmenter.js';
 import { computeNullable } from '../utils/nullable.js';
 import { computeFirstSets } from '../utils/firstSets.js';
 import { computeFollowSets } from '../utils/followSets.js';
-import { buildLR0States } from '../utils/bottomup/lr0Items.js';
-import { buildLR0Table } from '../utils/bottomup/lr0TableBuilder.js';
-import { buildSLRTable } from '../utils/bottomup/slrTableBuilder.js';
-import { generateLRCode } from '../utils/bottomup/lrCodeGenerator.js';
+import { buildLR0States } from '../utils/bottomUp/lr0Items.js';
+import { buildLR0Table } from '../utils/bottomUp/lr0TableBuilder.js';
+import { buildSLRTable } from '../utils/bottomUp/slrTableBuilder.js';
+import { generateLRCode } from '../utils/bottomUp/lrCodeGenerator.js';
 
 /**
  * Orchestrates the entire Bottom-Up compilation pipeline.

@@ -1,10 +1,10 @@
 import OpenAI from "openai";
-import "dotenv/config"
+import "dotenv/config";
 
-const ai = new OpenAI({
+const getAIClient = () => new OpenAI({
     baseURL: 'https://integrate.api.nvidia.com/v1',
-    apiKey: process.env.NVIDIA_API_KEY
-})
+    apiKey: process.env.NVIDIA_API_KEY || 'dummy_key'
+});
 
 export const generateRegexFromLLM = async (description) => {
     const prompt =
@@ -67,9 +67,10 @@ export const generateRegexFromLLM = async (description) => {
         • Output must be valid JSON.
 
         User Language Description: ${description}
-    `
+    `;
 
     try {
+        const ai = getAIClient();
         const payload = {
             model: "z-ai/glm-5.2",
             messages: [{ "role": "user", "content": prompt }],
@@ -77,7 +78,7 @@ export const generateRegexFromLLM = async (description) => {
             top_p: 0.95,
             chat_template_kwargs: { "thinking": true },
             stream: false
-        }
+        };
 
         const response = await ai.chat.completions.create(payload);
 
@@ -92,4 +93,4 @@ export const generateRegexFromLLM = async (description) => {
         console.error("LLM Error:", error.message);
         throw new Error("Failed to generate Regex");
     }
-}
+};

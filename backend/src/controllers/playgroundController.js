@@ -2,9 +2,9 @@ import Playground from '../models/Playground.js';
 import { generateBottomUpParser } from '../services/bottomUpService.js';
 // 1. Import your Top-Down Pipeline and Engine
 import { runLL1Pipeline } from '../services/topDownService.js';
-import { simulateLL1 } from '../utils/topdown/ll1Engine.js';
+import { simulateLL1 } from '../utils/topDown/ll1Engine.js';
 import { tokenize } from '../utils/tokenizer.js';
-import { simulateShiftReduceParsing } from '../utils/bottomup/shiftReduceEngine.js';
+import { simulateShiftReduceParsing } from '../utils/bottomUp/shiftReduceEngine.js';
 
 export const createPlayground = async (req, res) => {
     try {

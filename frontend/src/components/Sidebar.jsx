@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import gsap from 'gsap';
 import { setActiveTab, updateTabs } from '../store/workspaceSlice';
 import { deleteTab, updateTab } from '../api/workspaceClient'; 
+import GoogleAuthButton from './GoogleAuthButton';
 
 const Sidebar = ({ isCollapsed, toggleSidebar }) => {
     const sidebarRef = useRef(null);
@@ -172,6 +173,11 @@ const Sidebar = ({ isCollapsed, toggleSidebar }) => {
                     )}
                 </div>
             )}
+
+            {/* User Profile / Google Auth Container at bottom */}
+            <div className={`mt-auto border-t border-mocha-surface0 p-3 shrink-0 ${isCollapsed ? 'flex justify-center' : ''}`}>
+                <GoogleAuthButton compact={isCollapsed} />
+            </div>
 
             {editingTabId && (
                 <div className="absolute inset-0 z-50 bg-mocha-crust/80 backdrop-blur-sm flex items-center justify-center p-4">

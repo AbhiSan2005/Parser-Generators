@@ -1,10 +1,10 @@
-import { preprocessLL1 } from '../utils/topdown/ll1Preprocessor.js';
+import { preprocessLL1 } from '../utils/topDown/ll1Preprocessor.js';
 import { computeNullable } from '../utils/nullable.js';
 import { computeFirstSets } from '../utils/firstSets.js';
 import { computeFollowSets } from '../utils/followSets.js';
-import { buildLL1Table } from '../utils/topdown/ll1TableBuilder.js';
-import { generateLL1Code } from '../utils/topdown/ll1CodeGenerator.js';
-import { simulateLL1 } from '../utils/topdown/ll1Engine.js';
+import { buildLL1Table } from '../utils/topDown/ll1TableBuilder.js';
+import { generateLL1Code } from '../utils/topDown/ll1CodeGenerator.js';
+import { simulateLL1 } from '../utils/topDown/ll1Engine.js';
 
 export const runLL1Pipeline = (cfgData) => {
     // 1. Sanitize the Grammar (Left Recursion & Left Factoring)
